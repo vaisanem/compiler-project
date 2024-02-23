@@ -4,24 +4,24 @@ import re
 from enum import Enum
 
 whitepace = re.compile(r'\s');
+punctuation = re.compile("[(){},;]")
+operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or")
 int_literal = re.compile("[0-9]+")
 bool_literal = re.compile("true|false")
 keyword = re.compile("if|then|else|while|do|return|var") #unit, reserved identifiers?
 identifier = re.compile("[a-zA-Z_][a-zA-Z0-9_]*")
-operator = re.compile("[=!<>]=|[=<>%*/+-]") #and, or, not? Tokenize before identifiers
-punctuation = re.compile("[(){},;]")
 comment = re.compile(r'(//|#).*')
 
-invalid_tokens = re.compile("[0-9]+[a-zA-Z_]+") #integer literal and boolean literal/identifier have to be separated with whitespace
+invalid_tokens = re.compile("[0-9]+[a-zA-Z_]+") #REMOVE? Integer literal and boolean literal/identifier have to be separated with whitespace
 
 class Type(Enum):
-    INT_LITERAL = 1
-    BOOL_LITERAL = 2
-    KEYWORD = 3
-    IDENTIFIER = 3
-    OPERATOR = 4
-    PUNCTUATION = 5
-    END = 6
+    PUNCTUATION = 1
+    OPERATOR = 2
+    INT_LITERAL = 3
+    BOOL_LITERAL = 4
+    KEYWORD = 5
+    IDENTIFIER = 6
+    END = 7
 
 @dataclass	
 class Position:
@@ -49,28 +49,10 @@ def tokenize(source_code: str) -> list[Token]:
         match = invalid_tokens.match(source_code)
         if (match):
             raise SyntaxError("Wrong syntax")
-        match = int_literal.match(source_code)
+        match = punctuation.match(source_code)
         if (match):
             token = match.group();
-            tokens.append(Token(Type.INT_LITERAL, token))
-            source_code = source_code[match.end():]
-            continue
-        match = bool_literal.match(source_code)
-        if (match): #TODO: add tests
-            token = match.group();
-            tokens.append(Token(Type.BOOL_LITERAL, token))
-            source_code = source_code[match.end():]
-            continue
-        match = keyword.match(source_code)
-        if (match): #TODO: add tests
-            token = match.group();
-            tokens.append(Token(Type.KEYWORD, token))
-            source_code = source_code[match.end():]
-            continue
-        match = identifier.match(source_code)
-        if (match):
-            token = match.group();
-            tokens.append(Token(Type.IDENTIFIER, token))
+            tokens.append(Token(Type.PUNCTUATION, token))
             source_code = source_code[match.end():]
             continue
         match = operator.match(source_code)
@@ -79,10 +61,28 @@ def tokenize(source_code: str) -> list[Token]:
             tokens.append(Token(Type.OPERATOR, token))
             source_code = source_code[match.end():]
             continue
-        match = punctuation.match(source_code)
+        match = int_literal.match(source_code)
         if (match):
             token = match.group();
-            tokens.append(Token(Type.PUNCTUATION, token))
+            tokens.append(Token(Type.INT_LITERAL, token))
+            source_code = source_code[match.end():]
+            continue
+        match = bool_literal.match(source_code)
+        if (match):
+            token = match.group();
+            tokens.append(Token(Type.BOOL_LITERAL, token))
+            source_code = source_code[match.end():]
+            continue
+        match = keyword.match(source_code)
+        if (match):
+            token = match.group();
+            tokens.append(Token(Type.KEYWORD, token))
+            source_code = source_code[match.end():]
+            continue
+        match = identifier.match(source_code)
+        if (match):
+            token = match.group();
+            tokens.append(Token(Type.IDENTIFIER, token))
             source_code = source_code[match.end():]
             continue
         raise SyntaxError("Wrong syntax")
