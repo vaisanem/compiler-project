@@ -61,15 +61,23 @@ def test_if_expression_is_parsed() -> None:
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "false"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.KEYWORD, "else"), Token(Type.INT_LITERAL, "3"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "4")])
     assert parsed == compiler.ast.If(compiler.ast.Literal(False), compiler.ast.BinaryOp(compiler.ast.Literal(1), "+", compiler.ast.Literal(2)), compiler.ast.BinaryOp(compiler.ast.Literal(3), "+", compiler.ast.Literal(4)))
 
-def test_if_is_allowed_as_part_of_expression() -> None:
+def test_if_is_allowed_as_part_of_binary_expression() -> None:
     parsed = parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "e"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "2")])
     assert parsed == compiler.ast.BinaryOp(compiler.ast.Literal(1), "+", compiler.ast.If(compiler.ast.Identifier("e"), compiler.ast.Literal(2)))
+    parsed = parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "e"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "2"), Token(Type.KEYWORD, "else"), Token(Type.INT_LITERAL, "3"), Token(Type.OPERATOR, "/"), Token(Type.BOOL_LITERAL, "false")])
+    assert parsed == compiler.ast.BinaryOp(compiler.ast.Literal(1), "+", compiler.ast.If(compiler.ast.Identifier("e"), compiler.ast.Literal(2), compiler.ast.BinaryOp(compiler.ast.Literal(3), "/", compiler.ast.Literal(False))))
+    parsed = parse([Token(Type.PUNCTUATION, "("), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "e"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "2"), Token(Type.KEYWORD, "else"), Token(Type.INT_LITERAL, "3"), Token(Type.PUNCTUATION, ")"), Token(Type.OPERATOR, "/"), Token(Type.BOOL_LITERAL, "false")])
+    assert parsed == compiler.ast.BinaryOp(compiler.ast.BinaryOp(compiler.ast.Literal(1), "+", compiler.ast.If(compiler.ast.Identifier("e"), compiler.ast.Literal(2), compiler.ast.Literal(3))), "/", compiler.ast.Literal(False))
 
 def test_if_is_allowed_as_part_of_if_expression() -> None:
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "false"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2")])
     assert parsed == compiler.ast.If(compiler.ast.Literal(True), compiler.ast.If(compiler.ast.Literal(False), compiler.ast.BinaryOp(compiler.ast.Literal(1), "+", compiler.ast.Literal(2))))
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "false"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "2")])
     assert parsed == compiler.ast.If(compiler.ast.If(compiler.ast.Literal(False), compiler.ast.Literal(1)), compiler.ast.Literal(2))
+    parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "false"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.KEYWORD, "else"), Token(Type.INT_LITERAL, "3"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "2")])
+    assert parsed == compiler.ast.If(compiler.ast.If(compiler.ast.Literal(False), compiler.ast.Literal(1), compiler.ast.Literal(3)), compiler.ast.Literal(2))
+    parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "a"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.KEYWORD, "else"), Token(Type.KEYWORD, "if"), Token(Type.INT_LITERAL, "3"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "2")])
+    assert parsed == compiler.ast.If(compiler.ast.Identifier("a"), compiler.ast.Literal(1), compiler.ast.If(compiler.ast.Literal(3), compiler.ast.Literal(2)))
 
 def test_parse_raises_error_for_missing_token() -> None:
     with pytest.raises(Exception):

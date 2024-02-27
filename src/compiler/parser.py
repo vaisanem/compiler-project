@@ -3,7 +3,6 @@ import compiler.ast as ast
 from compiler.tokenizer import Token, Type
 
 def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
-    #TODO: refactor and add tests
     pos = 0
     
     def peek() -> Token:
@@ -64,26 +63,7 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
             return parse_identifier()
         raise Exception(f'{peek().position}: expected "(", literal or identifier')
     
-    def parse_term() -> ast.Expression:
-        exp = parse_factor()
-        while peek().type == Type.OPERATOR and peek().content in ['*', '/']:
-            op = consume().content
-            right = parse_factor()
-            exp = ast.BinaryOp(exp, op, right)
-        return exp
-    
-    def parse_binary_expression() -> ast.Expression:
-        #if
-        exp = parse_term()
-        while peek().type == Type.OPERATOR and peek().content in ['+', '-']:
-            op = consume().content
-            right = parse_term()
-            exp = ast.BinaryOp(exp, op, right)
-            #then + recursion?
-            #else?
-        return exp
-    
-    def parse_expression(subroutine: bool) -> ast.Expression:
+    def parse_term() -> ast.Expression: #TODO: refactor
         exp = None
         if peek().type == Type.KEYWORD and peek().content == "if":
             consume("if")
@@ -96,7 +76,23 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
             else:
                 exp = ast.If(condition, then_branch)
         else:
-            exp = parse_binary_expression()
+            exp = parse_factor()
+            while peek().type == Type.OPERATOR and peek().content in ['*', '/']:
+                op = consume().content
+                right = parse_factor()
+                exp = ast.BinaryOp(exp, op, right)
+        return exp
+    
+    def parse_binary_expression() -> ast.Expression:
+        exp = parse_term()
+        while peek().type == Type.OPERATOR and peek().content in ['+', '-']:
+            op = consume().content
+            right = parse_term()
+            exp = ast.BinaryOp(exp, op, right)
+        return exp
+    
+    def parse_expression(subroutine: bool) -> ast.Expression:
+        exp = parse_binary_expression()
         if not subroutine and peek().type != Type.END:
             raise Exception(f'{peek().position}: expected end of input')
         return exp
