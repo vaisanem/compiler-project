@@ -4,6 +4,9 @@ from compiler.tokenizer import tokenize, Token, Type
 def test_tokenize_outputs_a_list() -> None:
     assert type(tokenize("")) == list
     
+def test_tokenize_empty_input_is_valid() -> None:
+    assert tokenize(" ") == []
+    
 def test_tokenize_ignores_comments() -> None:
     tokens = tokenize(" // then \n//\n# else \n #")
     assert tokens == []

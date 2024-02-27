@@ -1,9 +1,8 @@
 
 from dataclasses import dataclass
 
-
 @dataclass
-class Expression:
+class Expression: #TODO: change to or add Statement? Add while, functions, variable declarations, code blocks?
     """Base class for AST nodes representing expressions."""
 
 @dataclass
@@ -16,8 +15,13 @@ class Identifier(Expression):
     name: str
 
 @dataclass
-class BinaryOp(Expression):
-    """AST node for a binary operation like `A + B`"""
+class BinaryOp(Expression): #rename to BinaryOperation, operator?
     left: Expression
     op: str
     right: Expression
+    
+@dataclass
+class If(Expression): #Statement?
+    condition: Expression
+    then_branch: Expression
+    else_branch: Expression | None = None
