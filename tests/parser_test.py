@@ -78,6 +78,22 @@ def test_if_is_allowed_as_part_of_if_expression() -> None:
     assert parsed == compiler.ast.If(compiler.ast.If(compiler.ast.Literal(False), compiler.ast.Literal(1), compiler.ast.Literal(3)), compiler.ast.Literal(2))
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "a"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.KEYWORD, "else"), Token(Type.KEYWORD, "if"), Token(Type.INT_LITERAL, "3"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "2")])
     assert parsed == compiler.ast.If(compiler.ast.Identifier("a"), compiler.ast.Literal(1), compiler.ast.If(compiler.ast.Literal(3), compiler.ast.Literal(2)))
+    
+def test_function_call_is_parsed() -> None:
+    parsed = parse([Token(Type.IDENTIFIER, "f"), Token(Type.PUNCTUATION, "("), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.PUNCTUATION, ")")])
+    assert parsed == compiler.ast.FunctionCall(compiler.ast.Identifier("f"), [compiler.ast.BinaryOp(compiler.ast.Literal(1), "+", compiler.ast.Literal(2))])
+    parsed = parse([Token(Type.IDENTIFIER, "f"), Token(Type.PUNCTUATION, "("), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ","), Token(Type.BOOL_LITERAL, "true"), Token(Type.PUNCTUATION, ")")])
+    assert parsed == compiler.ast.FunctionCall(compiler.ast.Identifier("f"), [compiler.ast.BinaryOp(compiler.ast.Literal(1), "+", compiler.ast.Identifier("a")), compiler.ast.Literal(True)])
+    parsed = parse([Token(Type.IDENTIFIER, "f"), Token(Type.PUNCTUATION, "("), Token(Type.PUNCTUATION, ")")])
+    assert parsed == compiler.ast.FunctionCall(compiler.ast.Identifier("f"), [])
+    parsed = parse([Token(Type.IDENTIFIER, "f"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ")")])
+    assert parsed == compiler.ast.FunctionCall(compiler.ast.Identifier("f"), [compiler.ast.Identifier("a")])
+    parsed = parse([Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, ")")])
+    assert parsed == compiler.ast.FunctionCall(compiler.ast.Identifier("a"), [compiler.ast.Identifier("b")])
+    parsed = parse([Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "c"), Token(Type.PUNCTUATION, ")")])
+    assert parsed == compiler.ast.FunctionCall(compiler.ast.FunctionCall(compiler.ast.Identifier("a"), [compiler.ast.Identifier("b")]), [compiler.ast.Identifier("c")])
+    parsed = parse([Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "c"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, ")")])
+    assert parsed == compiler.ast.FunctionCall(compiler.ast.Identifier("a"), [compiler.ast.FunctionCall(compiler.ast.Identifier("b"), [compiler.ast.Identifier("c")])])
 
 def test_parse_raises_error_for_missing_token() -> None:
     with pytest.raises(Exception):
@@ -145,7 +161,3 @@ def test_parse_raises_error_for_unexpected_token() -> None:
         
 def test_parse_accepts_empty_token_list() -> None:
     parse([])
-        
-def test_is_parsed_as_function_call() -> None:
-    parsed = parse([Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, ")")])
-    assert 0 == 1

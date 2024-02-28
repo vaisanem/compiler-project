@@ -52,16 +52,32 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
         consume(")")
         return exp
     
+    def parse_function_call(name: ast.Expression) -> ast.Expression:
+        consume("(")
+        arguments = []
+        if peek().content != ")":
+            arguments.append(parse_expression(True))
+            while peek().content == ",":
+                consume(",")
+                arguments.append(parse_expression(True))
+        consume(")")
+        return ast.FunctionCall(name, arguments)
+    
     def parse_factor() -> ast.Expression:
-        if peek().content == '(':
-            return parse_parentheses()
-        if peek().type == Type.INT_LITERAL:
-            return parse_int_literal()
-        if peek().type == Type.BOOL_LITERAL:
-            return parse_bool_literal()
-        if peek().type == Type.IDENTIFIER:
-            return parse_identifier()
-        raise Exception(f'{peek().position}: expected "(", literal or identifier')
+        exp = None
+        if peek().type == Type.PUNCTUATION and peek().content == '(':
+            exp = parse_parentheses()
+        elif peek().type == Type.INT_LITERAL:
+            exp = parse_int_literal()
+        elif peek().type == Type.BOOL_LITERAL:
+            exp = parse_bool_literal()
+        elif peek().type == Type.IDENTIFIER:
+            exp = parse_identifier()
+        else:
+            raise Exception(f'{peek().position}: expected "(", literal or identifier')
+        while peek().type == Type.PUNCTUATION and peek().content == '(':
+            exp = parse_function_call(exp)
+        return exp
     
     def parse_term() -> ast.Expression: #TODO: refactor
         exp = None
