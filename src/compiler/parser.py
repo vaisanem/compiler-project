@@ -3,6 +3,17 @@ import compiler.ast as ast
 from compiler.tokenizer import Token, Type
 
 def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
+
+    left_associative_binary_operators = [
+        ['*', '/', '%'],
+        ['+', '-'],
+        ['<', '<=', '>', '>='],
+        ['==', '!='],
+        ['and'],
+        ['or']
+    ]
+    lowest_precendence = len(left_associative_binary_operators)
+    
     pos = 0
     
     def peek() -> Token:
@@ -55,9 +66,9 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
     def parse_function_call(name: ast.Expression) -> ast.Expression:
         consume("(")
         arguments = []
-        if peek().content != ")":
+        if peek().content != ')':
             arguments.append(parse_expression(True))
-            while peek().content == ",":
+            while peek().type == Type.PUNCTUATION and peek().content == ',':
                 consume(",")
                 arguments.append(parse_expression(True))
         consume(")")
@@ -83,7 +94,7 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
         exp = None
         if peek().type == Type.KEYWORD and peek().content == "if":
             consume("if")
-            condition = parse_binary_expression()
+            condition = parse_binary_expression(lowest_precendence)
             consume("then")
             then_branch = parse_expression(True)
             if peek().type == Type.KEYWORD and peek().content == "else":
@@ -93,13 +104,9 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
                 exp = ast.If(condition, then_branch)
         else:
             exp = parse_factor()
-            while peek().type == Type.OPERATOR and peek().content in ['*', '/']:
-                op = consume().content
-                right = parse_factor()
-                exp = ast.BinaryOp(exp, op, right)
         return exp
     
-    def parse_binary_expression() -> ast.Expression:
+    def parse_binary_expression2() -> ast.Expression:
         exp = parse_term()
         while peek().type == Type.OPERATOR and peek().content in ['+', '-']:
             op = consume().content
@@ -107,8 +114,18 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
             exp = ast.BinaryOp(exp, op, right)
         return exp
     
+    def parse_binary_expression(precedence: int) -> ast.Expression:
+        if not precedence:
+            return parse_term()
+        exp = parse_binary_expression(precedence - 1)
+        while peek().type == Type.OPERATOR and peek().content in left_associative_binary_operators[precedence - 1]:
+            op = consume().content
+            right = parse_binary_expression(precedence - 1)
+            exp = ast.BinaryOp(exp, op, right)
+        return exp
+    
     def parse_expression(subroutine: bool) -> ast.Expression:
-        exp = parse_binary_expression()
+        exp = parse_binary_expression(lowest_precendence)
         if not subroutine and peek().type != Type.END:
             raise Exception(f'{peek().position}: expected end of input')
         return exp
