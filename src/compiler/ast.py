@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 @dataclass
-class Expression: #TODO: change to or add Statement (as base class of Expression)? Add while, functions, variable declarations, code blocks?
+class Expression: #TODO: change to or add Statement (as base class of Expression)? Add while, code blocks
     """Base class for AST nodes representing expressions."""
 
 @dataclass
@@ -13,9 +13,14 @@ class Literal(Expression):
 @dataclass
 class Identifier(Expression):
     name: str
+    
+@dataclass
+class UnaryOp(Expression):
+    op: str
+    right: Expression
 
 @dataclass
-class BinaryOp(Expression): #rename to BinaryOperation, operator?
+class BinaryOp(Expression): #Separate variable declaration?
     left: Expression
     op: str
     right: Expression
