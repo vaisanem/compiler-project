@@ -34,7 +34,7 @@ class While(Expression):
 class If(Expression):
     condition: Expression
     then_branch: Expression
-    else_branch: Expression | None = None
+    else_branch: Expression | None = None #Separate class for if with else?
     
 @dataclass
 class FunctionCall(Expression):

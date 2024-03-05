@@ -198,13 +198,13 @@ def test_parse_raises_error_for_unexpected_token() -> None:
         parse([Token(Type.IDENTIFIER, "a"), Token(Type.BOOL_LITERAL, "false")])
     with pytest.raises(Exception):
         parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.PUNCTUATION, ")")])
-    with pytest.raises(Exception, match="expected end of input"):
+    with pytest.raises(Exception):
         parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.INT_LITERAL, "3")])
     with pytest.raises(Exception):
         parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.OPERATOR, "+")])
-    with pytest.raises(Exception, match="expected end of input"):
+    with pytest.raises(Exception):
         parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.BOOL_LITERAL, "true")])
-    with pytest.raises(Exception, match="expected end of input"):
+    with pytest.raises(Exception):
         parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.OPERATOR, "+"), Token(Type.IDENTIFIER, "True"), Token(Type.IDENTIFIER, "asd")])
     with pytest.raises(Exception):
         parse([Token(Type.PUNCTUATION, "("), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ")")])
@@ -222,6 +222,6 @@ def test_parse_raises_error_for_unexpected_token() -> None:
         parse([Token(Type.OPERATOR, "*"), Token(Type.INT_LITERAL, "2"), Token(Type.OPERATOR, "*"), Token(Type.INT_LITERAL, "3")])
     with pytest.raises(Exception):
         parse([Token(Type.IDENTIFIER, "f"), Token(Type.PUNCTUATION, "("), Token(Type.PUNCTUATION, "("), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, ","), Token(Type.INT_LITERAL, "2"), Token(Type.PUNCTUATION, ","), Token(Type.INT_LITERAL, "3"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, ")")])
-        
+
 def test_parse_accepts_empty_token_list() -> None:
     parse([])
