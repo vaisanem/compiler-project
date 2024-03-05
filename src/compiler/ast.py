@@ -34,7 +34,7 @@ class While(Expression):
 class If(Expression):
     condition: Expression
     then_branch: Expression
-    else_branch: Expression | None = None #Separate class for if with else?
+    else_branch: Expression | None = None
     
 @dataclass
 class FunctionCall(Expression):
@@ -42,5 +42,5 @@ class FunctionCall(Expression):
     arguments: list[Expression]
     
 @dataclass
-class Block(Expression): #Return value is the value of the last expression in the block
-    statements: list[Expression]
+class Block(Expression):
+    statements: list[Expression] #Return value is defined by the last expression

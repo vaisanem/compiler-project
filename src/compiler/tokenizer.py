@@ -8,11 +8,11 @@ punctuation = re.compile("[(){},;]")
 operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or")
 int_literal = re.compile("[0-9]+")
 bool_literal = re.compile("true|false")
-keyword = re.compile("if|then|else|while|do|return|var") #unit, reserved identifiers?
+keyword = re.compile("if|then|else|while|do|var") #unit, reserved identifiers?
 identifier = re.compile("[a-zA-Z_][a-zA-Z0-9_]*")
 comment = re.compile(r'(//|#).*')
 
-invalid_tokens = re.compile("[0-9]+[a-zA-Z_]+") #REMOVE? Integer literal and boolean literal/identifier have to be separated with whitespace
+invalid_tokens = re.compile("[0-9]+[a-zA-Z_]+") #REMOVE? Integer literal and boolean literal/identifier/keyword have to be separated with whitespace
 
 class Type(Enum):
     PUNCTUATION = 1
