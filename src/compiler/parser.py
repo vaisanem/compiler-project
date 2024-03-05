@@ -12,7 +12,7 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
         ['and'],
         ['or']
     ]
-    lowest_precendence = len(left_associative_binary_operators)
+    lowest_precedence = len(left_associative_binary_operators)
     
     pos = 0
     
@@ -59,7 +59,7 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
     
     def parse_parentheses() -> ast.Expression:
         consume("(")
-        exp = parse_expression(True)
+        exp = parse_block()
         consume(")")
         return exp
     
@@ -67,10 +67,10 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
         consume("(")
         arguments = []
         if peek().content != ')':
-            arguments.append(parse_expression(True))
+            arguments.append(parse_block())
             while peek().type == Type.PUNCTUATION and peek().content == ',':
                 consume(",")
-                arguments.append(parse_expression(True))
+                arguments.append(parse_block())
         consume(")")
         return ast.FunctionCall(name, arguments)
     
@@ -90,16 +90,28 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
             exp = parse_function_call(exp)
         return exp
     
+    def parse_while_expression():
+        exp = None
+        if peek().type == Type.KEYWORD and peek().content == "while":
+            consume("while")
+            condition = parse_block()
+            consume("do")
+            do = parse_block()
+            exp = ast.While(condition, do)
+        else:
+            exp = parse_term()
+        return exp
+    
     def parse_if_expression() -> ast.Expression:
         exp = None
         if peek().type == Type.KEYWORD and peek().content == "if":
             consume("if")
-            condition = parse_expression(True)
+            condition = parse_block()
             consume("then")
-            then_branch = parse_expression(True)
+            then_branch = parse_block()
             if peek().type == Type.KEYWORD and peek().content == "else":
                 consume("else")
-                exp = ast.If(condition, then_branch, parse_expression(True))
+                exp = ast.If(condition, then_branch, parse_block())
             else:
                 exp = ast.If(condition, then_branch)
         else:
@@ -124,17 +136,50 @@ def parse(tokens: list[Token]) -> ast.Expression: #rename pos to index etc?
         return exp
     
     def parse_assignment() -> ast.Expression:
-        exp = parse_binary_expression(lowest_precendence)
+        exp = parse_binary_expression(lowest_precedence)
         if peek().type == Type.OPERATOR and peek().content == '=':
             op = consume("=").content
             right = parse_assignment()
             exp = ast.BinaryOp(exp, op, right)
         return exp
     
-    def parse_expression(subroutine: bool) -> ast.Expression:
+    def parse_expression() -> ast.Expression: #check that there is no rubbish after the expression (in parse_term)?
         exp = parse_assignment()
-        if not subroutine and peek().type != Type.END:
-            raise Exception(f'{peek().position}: expected end of input')
         return exp
     
-    return parse_expression(False)
+    def parse_block() -> ast.Expression: #make semicolon optional for blocks, but prohibited when block is used as part of expression?
+        statements = []
+        if peek().type == Type.PUNCTUATION and peek().content == '{':
+            consume("{")
+            if peek().content != '}':
+                statements.append(parse_block())
+                while peek().content == ';':
+                    consume(";")
+                    if peek().content == '}':
+                        statements.append(ast.Literal(None))
+                    else:
+                        statements.append(parse_block())
+            consume("}")
+        else:
+            return parse_expression()
+        return ast.Block(statements)
+
+    def parse_top_level() -> ast.Expression:
+        if peek().type == Type.END:
+            return ast.Literal(None) #how should empty token list be handled?
+        exp = parse_block()
+        if peek().type == Type.END:
+            return exp
+        statements = []
+        statements.append(exp)
+        if peek().content != ';':
+            statements.append(parse_block())
+        while peek().type == Type.PUNCTUATION and peek().content == ';':
+            consume(";")
+            if peek().type == Type.END:
+                statements.append(ast.Literal(None))
+            else:
+                statements.append(parse_block()) 
+        return ast.Block(statements)
+
+    return parse_top_level()
