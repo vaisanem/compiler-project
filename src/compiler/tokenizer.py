@@ -89,7 +89,6 @@ def tokenize(source_code: str) -> list[Token]:
                 continue
             alt = keyword.fullmatch(match.group())
             if alt:
-                print(match.group())
                 match = alt
                 handle_match(Type.KEYWORD)
                 continue
