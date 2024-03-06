@@ -17,7 +17,7 @@ def test_punctuation_marks_are_tokenized() -> None:
                       Token(Type.PUNCTUATION, "{"), Token(Type.PUNCTUATION, ",")]
     
 def test_operators_are_tokenized() -> None:
-    tokens = tokenize("==!= <not +<=> >=/ % *and-or ")
+    tokens = tokenize("==!= <not +<=> >=/ % *and- or ")
     assert tokens == [Token(Type.OPERATOR, "=="), Token(Type.OPERATOR, "!="), Token(Type.OPERATOR, "<"), Token(Type.OPERATOR, "not"),
                       Token(Type.OPERATOR, "+"), Token(Type.OPERATOR, "<="), Token(Type.OPERATOR, ">"), Token(Type.OPERATOR, ">="), 
                       Token(Type.OPERATOR, "/"), Token(Type.OPERATOR, "%"), Token(Type.OPERATOR, "*"), Token(Type.OPERATOR, "and"), 
@@ -50,10 +50,32 @@ def test_all_token_types_are_tokenized() -> None:
                       Token(Type.INT_LITERAL, "00"), Token(Type.OPERATOR, "+"), Token(Type.OPERATOR, "not"), Token(Type.BOOL_LITERAL, "true")]
     
 def test_two_operators_whiteout_whitespace() -> None: #make this fail
-    tokens = tokenize("notnot")
-    assert tokens == [Token(Type.OPERATOR, "not"), Token(Type.OPERATOR, "not")]
     tokens = tokenize("====")
     assert tokens == [Token(Type.OPERATOR, "=="), Token(Type.OPERATOR, "==")]
+    
+def test_keyword_is_not_matched_for_a_substring() -> None:
+    tokens = tokenize("ifelse")
+    assert tokens != [Token(Type.KEYWORD, "if"), Token(Type.KEYWORD, "else")]
+    assert tokens == [Token(Type.IDENTIFIER, "ifelse")]
+    tokens = tokenize("whilea")
+    assert tokens != [Token(Type.KEYWORD, "while"), Token(Type.IDENTIFIER, "a")]
+    assert tokens == [Token(Type.IDENTIFIER, "whilea")]
+    
+def test_operator_is_not_matched_for_a_substring() -> None:
+    tokens = tokenize("andor")
+    assert tokens != [Token(Type.OPERATOR, "and"), Token(Type.OPERATOR, "or")]
+    assert tokens == [Token(Type.IDENTIFIER, "andor")]
+    tokens = tokenize("notnota")
+    assert tokens != [Token(Type.OPERATOR, "not"), Token(Type.OPERATOR, "not"), Token(Type.IDENTIFIER, "a")]
+    assert tokens == [Token(Type.IDENTIFIER, "notnota")]
+    
+def test_boolean_literal_is_not_matched_for_a_substring() -> None:
+    tokens = tokenize("truefalse")
+    assert tokens != [Token(Type.BOOL_LITERAL, "true"), Token(Type.BOOL_LITERAL, "false")]
+    assert tokens == [Token(Type.IDENTIFIER, "truefalse")]
+    tokens = tokenize("falsee")
+    assert tokens != [Token(Type.BOOL_LITERAL, "false"), Token(Type.IDENTIFIER, "e")]
+    assert tokens == [Token(Type.IDENTIFIER, "falsee")]
                       
 def test_tokenize_raises_error_for_unsupported_characters() -> None:
     with pytest.raises(SyntaxError):

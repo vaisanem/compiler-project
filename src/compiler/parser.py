@@ -59,41 +59,6 @@ def parse(tokens: list[Token]) -> ast.Expression:
             raise Exception(f'{peek().position}: expected identifier')
         return ast.Identifier(consume().content)
     
-    def parse_parentheses() -> ast.Expression:
-        consume("(")
-        exp = parse_expression()
-        consume(")")
-        return exp
-    
-    def parse_function_call(name: ast.Expression) -> ast.Expression:
-        consume("(")
-        arguments = []
-        if peek().content != ')':
-            arguments.append(parse_expression())
-            while peek().type == Type.PUNCTUATION and peek().content == ',':
-                consume(",")
-                arguments.append(parse_expression())
-        consume(")")
-        return ast.FunctionCall(name, arguments)
-    
-    def parse_term() -> ast.Expression:
-        exp = None
-        if peek().type == Type.PUNCTUATION and peek().content == '{': #now {a}(b) is treated as function call?
-            exp = parse_block()
-        elif peek().type == Type.PUNCTUATION and peek().content == '(':
-            exp = parse_parentheses()
-        elif peek().type == Type.INT_LITERAL:
-            exp = parse_int_literal()
-        elif peek().type == Type.BOOL_LITERAL:
-            exp = parse_bool_literal()
-        elif peek().type == Type.IDENTIFIER:
-            exp = parse_identifier()
-        else:
-            raise Exception(f'{peek().position}: expected "(", literal or identifier instead of "{peek().content}"')
-        while peek().type == Type.PUNCTUATION and peek().content == '(':
-            exp = parse_function_call(exp)
-        return exp
-    
     def parse_block() -> ast.Expression: #refactor
         consume("{")
         statements = []
@@ -119,6 +84,41 @@ def parse(tokens: list[Token]) -> ast.Expression:
                         break
         consume("}")
         return ast.Block(statements)
+    
+    def parse_parentheses() -> ast.Expression:
+        consume("(")
+        exp = parse_expression()
+        consume(")")
+        return exp
+    
+    def parse_function_call(name: ast.Expression) -> ast.Expression:
+        consume("(")
+        arguments = []
+        if peek().content != ')':
+            arguments.append(parse_expression())
+            while peek().type == Type.PUNCTUATION and peek().content == ',':
+                consume(",")
+                arguments.append(parse_expression())
+        consume(")")
+        return ast.FunctionCall(name, arguments)
+    
+    def parse_term() -> ast.Expression:
+        exp = None
+        if peek().type == Type.PUNCTUATION and peek().content == '{':
+            exp = parse_block()
+        elif peek().type == Type.PUNCTUATION and peek().content == '(':
+            exp = parse_parentheses()
+        elif peek().type == Type.INT_LITERAL:
+            exp = parse_int_literal()
+        elif peek().type == Type.BOOL_LITERAL:
+            exp = parse_bool_literal()
+        elif peek().type == Type.IDENTIFIER:
+            exp = parse_identifier()
+        else:
+            raise Exception(f'{peek().position}: expected "(", literal or identifier instead of "{peek().content}"')
+        while peek().type == Type.PUNCTUATION and peek().content == '(':
+            exp = parse_function_call(exp)
+        return exp
 
     def parse_while_expression():
         exp = None

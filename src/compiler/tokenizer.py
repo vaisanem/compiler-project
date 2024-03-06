@@ -5,10 +5,10 @@ from enum import Enum
 
 whitepace = re.compile(r'\s');
 punctuation = re.compile("[(){},;]")
-operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or") #prohibit "notnot", "====" etc? Or allow "notnot" as identifier?
+operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or") #prohibit "====" etc? Reserved all of these as "not" couldnt be used as identifier in sandbox anyway
 int_literal = re.compile("[0-9]+")
 bool_literal = re.compile("true|false")
-keyword = re.compile("if|then|else|while|do|var") #unit, reserved identifiers? Reserved all of these as if, w where not available as identfiers in sandbox anyway
+keyword = re.compile("if|then|else|while|do|var") #unit, reserved identifiers? Reserved all of these as if, while and var couldnt be used as identfiers in sandbox anyway
 identifier = re.compile("[a-zA-Z_][a-zA-Z0-9_]*")
 comment = re.compile(r'(//|#).*')
 
@@ -34,13 +34,24 @@ class Token:
     content : str
     position : Position = field(default_factory=lambda: Position(0,0))
 
-def tokenize(source_code: str) -> list[Token]: #refactor
+def tokenize(source_code: str) -> list[Token]:
     #TODO: add location to tokens
     tokens = []
     location = {"line": 1, "column": 1}
+    match = None
+    
+    def handle_match(type: Type) -> None:
+        if not match:
+            return
+        nonlocal source_code
+        token = match.group();
+        tokens.append(Token(type, token))
+        source_code = source_code[match.end():]
+        location["column"] += match.end()
+
     while source_code:
         match = whitepace.match(source_code)
-        if (match):
+        if match:
             source_code = source_code[match.end():]
             if (match.group() in ["\n", "\r", "\v", "\f"]):
                 location["line"] += 1
@@ -49,54 +60,44 @@ def tokenize(source_code: str) -> list[Token]: #refactor
                 location["column"] += match.end()
             continue
         match = comment.match(source_code)
-        if (match):
+        if match:
             source_code = source_code[match.end():]
             location["column"] += match.end()
             continue
         match = invalid_tokens.match(source_code)
-        if (match):
+        if match:
             raise SyntaxError(f'Invalid identifier "{match.group()}" at: line {location["line"]}, column {location["column"]}')
         match = punctuation.match(source_code)
-        if (match):
-            token = match.group();
-            tokens.append(Token(Type.PUNCTUATION, token))
-            source_code = source_code[match.end():]
-            location["column"] += match.end()
-            continue
-        match = operator.match(source_code)
-        if (match):
-            token = match.group();
-            tokens.append(Token(Type.OPERATOR, token))
-            source_code = source_code[match.end():]
-            location["column"] += match.end()
+        if match:
+            handle_match(Type.PUNCTUATION)
             continue
         match = int_literal.match(source_code)
-        if (match):
-            token = match.group();
-            tokens.append(Token(Type.INT_LITERAL, token))
-            source_code = source_code[match.end():]
-            location["column"] += match.end()
-            continue
-        match = bool_literal.match(source_code)
-        if (match):
-            token = match.group();
-            tokens.append(Token(Type.BOOL_LITERAL, token))
-            source_code = source_code[match.end():]
-            location["column"] += match.end()
-            continue
-        match = keyword.match(source_code)
-        if (match):
-            token = match.group();
-            tokens.append(Token(Type.KEYWORD, token))
-            source_code = source_code[match.end():]
-            location["column"] += match.end()
+        if match:
+            handle_match(Type.INT_LITERAL)
             continue
         match = identifier.match(source_code)
-        if (match):
-            token = match.group();
-            tokens.append(Token(Type.IDENTIFIER, token))
-            source_code = source_code[match.end():]
-            location["column"] += match.end()
+        if match:
+            alt = operator.fullmatch(match.group())
+            if alt:
+                match = alt
+                handle_match(Type.OPERATOR)
+                continue
+            alt = bool_literal.fullmatch(match.group())
+            if alt:
+                match = alt
+                handle_match(Type.BOOL_LITERAL)
+                continue
+            alt = keyword.fullmatch(match.group())
+            if alt:
+                print(match.group())
+                match = alt
+                handle_match(Type.KEYWORD)
+                continue
+            handle_match(Type.IDENTIFIER)
+            continue
+        match = operator.match(source_code)
+        if match:
+            handle_match(Type.OPERATOR)
             continue
         raise SyntaxError(f'Invalid character sequence at: line {location["line"]}, column {location["column"]}')
     return tokens
