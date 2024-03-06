@@ -85,6 +85,11 @@ def test_top_level_works_fine() -> None:
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.IDENTIFIER, "b")])
     assert parsed == compiler.ast.Block([compiler.ast.If(compiler.ast.Literal(True), compiler.ast.Block([compiler.ast.Identifier("a")])), compiler.ast.Identifier("b")])
 
+def test_this_shouldnt_be_a_function_call() -> None:
+    parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, ")")])
+    assert parsed != compiler.ast.FunctionCall(compiler.ast.Block([compiler.ast.Identifier("a")]), [compiler.ast.Identifier("b")])
+    assert parsed == compiler.ast.Block([compiler.ast.Block([compiler.ast.Identifier("a")]), compiler.ast.Identifier("b")])
+
 def test_parse_raises_error_for_bad_input() -> None:
     with pytest.raises(Exception):
         parse([Token(Type.PUNCTUATION, ";")])
