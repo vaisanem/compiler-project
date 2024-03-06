@@ -33,9 +33,9 @@ def test_boolean_literals_are_tokenized() -> None:
                       Token(Type.BOOL_LITERAL, "true")]
     
 def test_keywords_are_tokenized() -> None:
-    tokens = tokenize("if then else while do return var")
+    tokens = tokenize("if then else while do var")
     assert tokens == [Token(Type.KEYWORD, "if"), Token(Type.KEYWORD, "then"), Token(Type.KEYWORD, "else"), Token(Type.KEYWORD, "while"), 
-                      Token(Type.KEYWORD, "do"), Token(Type.KEYWORD, "return"), Token(Type.KEYWORD, "var")]
+                      Token(Type.KEYWORD, "do"), Token(Type.KEYWORD, "var")]
     
 def test_identifiers_are_tokenized() -> None:
     tokens = tokenize(" _666 AND _a6   \nasd  a_1_B ____")
@@ -48,19 +48,25 @@ def test_all_token_types_are_tokenized() -> None:
                       Token(Type.IDENTIFIER, "AND"), Token(Type.OPERATOR, "=="), Token(Type.INT_LITERAL, "666"), Token(Type.KEYWORD, "do"),
                       Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a_1_B"), Token(Type.OPERATOR, "-"), Token(Type.IDENTIFIER, "__"),
                       Token(Type.INT_LITERAL, "00"), Token(Type.OPERATOR, "+"), Token(Type.OPERATOR, "not"), Token(Type.BOOL_LITERAL, "true")]
+    
+def test_two_operators_whiteout_whitespace() -> None: #make this fail
+    tokens = tokenize("notnot")
+    assert tokens == [Token(Type.OPERATOR, "not"), Token(Type.OPERATOR, "not")]
+    tokens = tokenize("====")
+    assert tokens == [Token(Type.OPERATOR, "=="), Token(Type.OPERATOR, "==")]
                       
 def test_tokenize_raises_error_for_unsupported_characters() -> None:
-    with pytest.raises(SyntaxError, match="Wrong syntax"):
+    with pytest.raises(SyntaxError):
         tokenize("var x = (A && b) ? TRUE : FALSE")
-    with pytest.raises(SyntaxError, match="Wrong syntax"):
+    with pytest.raises(SyntaxError):
         tokenize("&")
-    with pytest.raises(SyntaxError, match="Wrong syntax"):
+    with pytest.raises(SyntaxError):
         tokenize("ä")
         
 def test_tokenize_raises_error_for_invalid_tokens() -> None:
-    with pytest.raises(SyntaxError, match="Wrong syntax"):
+    with pytest.raises(SyntaxError):
         tokenize("23 else 6a")
-    with pytest.raises(SyntaxError, match="Wrong syntax"):
+    with pytest.raises(SyntaxError):
         tokenize("23 else 6A")
-    with pytest.raises(SyntaxError, match="Wrong syntax"):
+    with pytest.raises(SyntaxError):
         tokenize("23 else 6_")

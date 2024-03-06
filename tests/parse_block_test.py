@@ -93,7 +93,7 @@ def test_parse_raises_error_for_bad_input() -> None:
     with pytest.raises(Exception):
         parse([Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}")])
     with pytest.raises(Exception):
-        parse([Token(Type.PUNCTUATION, "{"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.IDENTIFIER, "b"), Token(Type.IDENTIFIER, "c"), Token(Type.PUNCTUATION, "}")])
+        parse([Token(Type.PUNCTUATION, "{"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}"), Token(Type.IDENTIFIER, "c"), Token(Type.PUNCTUATION, "}")])
     with pytest.raises(Exception):
         parse([Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ";"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "5")])    
     with pytest.raises(Exception):

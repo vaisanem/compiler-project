@@ -36,10 +36,10 @@ def parse(tokens: list[Token]) -> ast.Expression:
         nonlocal index, previous
         token = peek()
         if isinstance(expected, str) and token.content != expected:
-            raise Exception(f'{token.position}: expected "{expected}"')
+            raise Exception(f'{token.position}: expected "{expected}" instead of "{token.content}"')
         if isinstance(expected, list) and token.content not in expected:
             comma_separated = ", ".join([f'"{e}"' for e in expected])
-            raise Exception(f'{token.position}: expected one of: {comma_separated}')
+            raise Exception(f'{token.position}: expected one of: {comma_separated} instead of "{token.content}"')
         index += 1
         previous = token
         return token
@@ -115,7 +115,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
         elif peek().type == Type.IDENTIFIER:
             exp = parse_identifier()
         else:
-            raise Exception(f'{peek().content}: expected "(", literal or identifier')
+            raise Exception(f'{peek().position}: expected "(", literal or identifier instead of "{peek().content}"')
         while peek().type == Type.PUNCTUATION and peek().content == '(':
             exp = parse_function_call(exp)
         return exp
