@@ -8,7 +8,7 @@ punctuation = re.compile("[(){},;]")
 operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or") #prohibit "====" etc? Reserved all of these as "not" couldnt be used as identifier in sandbox anyway
 int_literal = re.compile("[0-9]+")
 bool_literal = re.compile("true|false")
-keyword = re.compile("if|then|else|while|do|var") #unit, reserved identifiers? Reserved all of these as if, while and var couldnt be used as identfiers in sandbox anyway
+keyword = re.compile("if|then|else|while|do|var") #unit? Reserved all of these as "if", "while" and "var" couldnt be used as identfiers in sandbox anyway
 identifier = re.compile("[a-zA-Z_][a-zA-Z0-9_]*")
 comment = re.compile(r'(//|#).*')
 
@@ -40,7 +40,7 @@ def tokenize(source_code: str) -> list[Token]:
     location = {"line": 1, "column": 1}
     match = None
     
-    def handle_match(type: Type) -> None:
+    def add_token(type: Type) -> None:
         if not match:
             return
         nonlocal source_code
@@ -53,7 +53,7 @@ def tokenize(source_code: str) -> list[Token]:
         match = whitepace.match(source_code)
         if match:
             source_code = source_code[match.end():]
-            if (match.group() in ["\n", "\r", "\v", "\f"]):
+            if (match.group() in ["\n", "\r", "\v", "\f"]): # how to handle tabs?
                 location["line"] += 1
                 location["column"] = 1
             else:
@@ -69,34 +69,34 @@ def tokenize(source_code: str) -> list[Token]:
             raise SyntaxError(f'Invalid identifier "{match.group()}" at: line {location["line"]}, column {location["column"]}')
         match = punctuation.match(source_code)
         if match:
-            handle_match(Type.PUNCTUATION)
+            add_token(Type.PUNCTUATION)
             continue
         match = int_literal.match(source_code)
         if match:
-            handle_match(Type.INT_LITERAL)
+            add_token(Type.INT_LITERAL)
             continue
         match = identifier.match(source_code)
         if match:
             alt = operator.fullmatch(match.group())
             if alt:
                 match = alt
-                handle_match(Type.OPERATOR)
+                add_token(Type.OPERATOR)
                 continue
             alt = bool_literal.fullmatch(match.group())
             if alt:
                 match = alt
-                handle_match(Type.BOOL_LITERAL)
+                add_token(Type.BOOL_LITERAL)
                 continue
             alt = keyword.fullmatch(match.group())
             if alt:
                 match = alt
-                handle_match(Type.KEYWORD)
+                add_token(Type.KEYWORD)
                 continue
-            handle_match(Type.IDENTIFIER)
+            add_token(Type.IDENTIFIER)
             continue
         match = operator.match(source_code)
         if match:
-            handle_match(Type.OPERATOR)
+            add_token(Type.OPERATOR)
             continue
         raise SyntaxError(f'Invalid character sequence at: line {location["line"]}, column {location["column"]}')
     return tokens

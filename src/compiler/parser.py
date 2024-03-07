@@ -59,29 +59,23 @@ def parse(tokens: list[Token]) -> ast.Expression:
             raise Exception(f'{peek().position}: expected identifier')
         return ast.Identifier(consume().content)
     
-    def parse_block() -> ast.Expression: #refactor
+    def parse_block() -> ast.Expression:
         consume("{")
         statements = []
-        while peek().content != '}':
+        if peek().content != '}':
             statements.append(parse_expression())
-            if peek().content != '}' and not isinstance(statements[-1], ast.Block):
+            while peek().content != '}':
                 if previous and previous != Token(Type.PUNCTUATION, "}"):
                     consume(";")
                     if peek().type == Type.PUNCTUATION and peek().content == '}':
                         statements.append(ast.Literal(None))
                         break
-                else:
-                    if peek().type == Type.PUNCTUATION and peek().content == ';':
-                        consume(";")
-                        if peek().type == Type.PUNCTUATION and peek().content == '}':
-                            statements.append(ast.Literal(None))
-                            break
-            else:
-                if peek().type == Type.PUNCTUATION and peek().content == ';':
+                elif peek().type == Type.PUNCTUATION and peek().content == ';':
                     consume(";")
                     if peek().type == Type.PUNCTUATION and peek().content == '}':
                         statements.append(ast.Literal(None))
                         break
+                statements.append(parse_expression())
         consume("}")
         return ast.Block(statements)
     
@@ -177,7 +171,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
         exp = parse_assignment()
         return exp
     
-    def parse_top_level() -> ast.Expression: #refactor
+    def parse_top_level() -> ast.Expression:
         if peek().type == Type.END:
             return ast.Literal(None) #how should empty token list be handled?
         exp = parse_expression()
@@ -185,17 +179,11 @@ def parse(tokens: list[Token]) -> ast.Expression:
             return exp
         statements = [exp]
         while peek().type != Type.END:
-            if not isinstance(statements[-1], ast.Block):
-                if previous and not previous == Token(Type.PUNCTUATION, "}"):
-                    consume(";")
-                    if peek().type == Type.END:
-                        statements.append(ast.Literal(None))
-                        break
-                elif peek().type == Type.PUNCTUATION and peek().content == ';':
-                    consume(";")
-                    if peek().type == Type.END:
-                        statements.append(ast.Literal(None))
-                        break
+            if previous and not previous == Token(Type.PUNCTUATION, "}"):
+                consume(";")
+                if peek().type == Type.END:
+                    statements.append(ast.Literal(None))
+                    break
             elif peek().type == Type.PUNCTUATION and peek().content == ';':
                 consume(";")
                 if peek().type == Type.END:
