@@ -15,12 +15,12 @@ class Identifier(Expression):
     name: str
     
 @dataclass
-class UnaryOp(Expression):
+class UnaryOp(Expression): #Rename to Unary and Binary respectively?
     op: str
     right: Expression
 
 @dataclass
-class BinaryOp(Expression): #Separate variable declaration?
+class BinaryOp(Expression): #Separate assignment node?
     left: Expression
     op: str
     right: Expression
@@ -40,6 +40,12 @@ class If(Expression):
 class FunctionCall(Expression):
     name: Expression
     arguments: list[Expression]
+    
+@dataclass
+class VariableDeclaration(Expression):
+    name: Identifier
+    type_exp: None
+    value: Expression
     
 @dataclass
 class Block(Expression):

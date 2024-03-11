@@ -5,7 +5,7 @@ from enum import Enum
 
 whitepace = re.compile(r'\s');
 punctuation = re.compile("[(){},;]")
-operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or") #prohibit "====" etc? Reserved all of these as "not" couldnt be used as identifier in sandbox anyway
+operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or") #Reserved all of these as "not" couldnt be used as identifier in sandbox anyway
 int_literal = re.compile("[0-9]+")
 bool_literal = re.compile("true|false")
 keyword = re.compile("if|then|else|while|do|var") #unit? Reserved all of these as "if", "while" and "var" couldnt be used as identfiers in sandbox anyway
@@ -27,6 +27,9 @@ class Type(Enum):
 class Position:
     line : int
     column : int
+    
+    def __str__(self) -> str:
+        return f'line {self.line}, column {self.column}'
 
 @dataclass
 class Token:
@@ -35,7 +38,6 @@ class Token:
     position : Position = field(default_factory=lambda: Position(0,0))
 
 def tokenize(source_code: str) -> list[Token]:
-    #TODO: add location to tokens
     tokens = []
     location = {"line": 1, "column": 1}
     match = None
@@ -45,7 +47,7 @@ def tokenize(source_code: str) -> list[Token]:
             return
         nonlocal source_code
         token = match.group();
-        tokens.append(Token(type, token))
+        tokens.append(Token(type, token)) #TODO: add position to tokens
         source_code = source_code[match.end():]
         location["column"] += match.end()
 

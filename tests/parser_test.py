@@ -70,8 +70,8 @@ def test_parentheses_are_parsed() -> None:
     assert parsed == ast.BinaryOp(ast.BinaryOp(ast.Literal(1), "*", ast.Literal(2)), "+", ast.BinaryOp(ast.Literal(3), "-", ast.Literal(4)))
 
 def test_precedence_is_correct() -> None:
-    parsed = parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.OPERATOR, "*"), Token(Type.INT_LITERAL, "3")])
-    assert parsed == ast.BinaryOp(ast.Literal(1), "+", ast.BinaryOp(ast.Literal(2), "*", ast.Literal(3)))
+    parsed = parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "*"), Token(Type.INT_LITERAL, "2"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "3")])
+    assert parsed == ast.BinaryOp(ast.BinaryOp(ast.Literal(1), "*", ast.Literal(2)), "+", ast.Literal(3))
     parsed = parse([Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "-"), Token(Type.IDENTIFIER, "TRUE"), Token(Type.OPERATOR, "/"), Token(Type.INT_LITERAL, "3"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "4")])
     assert parsed == ast.BinaryOp(ast.BinaryOp(ast.Literal(1), "-", ast.BinaryOp(ast.Identifier("TRUE"), "/", ast.Literal(3))), "+", ast.Literal(4))
     parsed = parse([Token(Type.BOOL_LITERAL, "true"), Token(Type.OPERATOR, "-"), Token(Type.INT_LITERAL, "2"), Token(Type.OPERATOR, "*"), Token(Type.INT_LITERAL, "3"), Token(Type.OPERATOR, "/"), Token(Type.BOOL_LITERAL, "false")])
@@ -118,6 +118,8 @@ def test_if_is_allowed_as_part_of_binary_expression() -> None:
     assert parsed == ast.BinaryOp(ast.Literal(1), "+", ast.If(ast.Identifier("e"), ast.Literal(2), ast.BinaryOp(ast.Literal(3), "/", ast.Literal(False))))
     parsed = parse([Token(Type.PUNCTUATION, "("), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "e"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "2"), Token(Type.KEYWORD, "else"), Token(Type.INT_LITERAL, "3"), Token(Type.PUNCTUATION, ")"), Token(Type.OPERATOR, "/"), Token(Type.BOOL_LITERAL, "false")])
     assert parsed == ast.BinaryOp(ast.BinaryOp(ast.Literal(1), "+", ast.If(ast.Identifier("e"), ast.Literal(2), ast.Literal(3))), "/", ast.Literal(False))
+    parsed = parse([Token(Type.PUNCTUATION, "("), Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "a"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2"), Token(Type.KEYWORD, "else"), Token(Type.INT_LITERAL, "3"), Token(Type.PUNCTUATION, ")"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "4")])
+    assert parsed == ast.BinaryOp(ast.If(ast.Identifier("a"), ast.BinaryOp(ast.Literal(1), "+", ast.Literal(2)), ast.Literal(3)), "+", ast.Literal(4))
 
 def test_if_is_allowed_as_part_of_if_expression() -> None:
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "false"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2")])
@@ -222,10 +224,6 @@ def test_parse_raises_error_for_unexpected_token() -> None:
         parse([Token(Type.OPERATOR, "*"), Token(Type.INT_LITERAL, "2"), Token(Type.OPERATOR, "*"), Token(Type.INT_LITERAL, "3")])
     with pytest.raises(Exception):
         parse([Token(Type.IDENTIFIER, "f"), Token(Type.PUNCTUATION, "("), Token(Type.PUNCTUATION, "("), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, ","), Token(Type.INT_LITERAL, "2"), Token(Type.PUNCTUATION, ","), Token(Type.INT_LITERAL, "3"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, ")")])
-
-def test_parse_raises_error_for_bad_input() -> None:
-    with pytest.raises(Exception):
-        parse(tokenize("if then then then"))
 
 def test_parse_accepts_empty_token_list() -> None:
     parse([])

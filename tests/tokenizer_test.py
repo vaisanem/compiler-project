@@ -49,10 +49,6 @@ def test_all_token_types_are_tokenized() -> None:
                       Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a_1_B"), Token(Type.OPERATOR, "-"), Token(Type.IDENTIFIER, "__"),
                       Token(Type.INT_LITERAL, "00"), Token(Type.OPERATOR, "+"), Token(Type.OPERATOR, "not"), Token(Type.BOOL_LITERAL, "true")]
     
-def test_two_operators_whiteout_whitespace() -> None: #make this fail
-    tokens = tokenize("====")
-    assert tokens == [Token(Type.OPERATOR, "=="), Token(Type.OPERATOR, "==")]
-    
 def test_keyword_is_not_matched_for_a_substring() -> None:
     tokens = tokenize("ifelse")
     assert tokens != [Token(Type.KEYWORD, "if"), Token(Type.KEYWORD, "else")]

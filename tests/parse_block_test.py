@@ -64,6 +64,8 @@ def test_random() -> None:
     assert parsed == ast.Block([ast.Block([ast.Identifier("x")]), ast.Block([ast.Identifier("y")]), ast.Literal(None)])
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "x"), Token(Type.PUNCTUATION, ";"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, ";"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "y"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "}")])
     assert parsed == ast.Block([ast.Block([ast.Identifier("x"), ast.Literal(None)]), ast.Block([ast.Identifier("y")])])
+    parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, "}"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2")])
+    assert parsed == ast.BinaryOp(ast.Block([ast.Literal(1)]), "+", ast.Literal(2))
 
 def test_top_level_works_fine() -> None:
     parsed = parse([Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, ";"), Token(Type.INT_LITERAL, "2"), Token(Type.PUNCTUATION, ";"), Token(Type.INT_LITERAL, "3"), Token(Type.PUNCTUATION, ";")])
@@ -85,7 +87,7 @@ def test_top_level_works_fine() -> None:
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.IDENTIFIER, "b")])
     assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")])), ast.Identifier("b")])
 
-def test_this_should_be_a_function_call_by_recursive_definition() -> None:
+def test_i_guess_function_name_can_also_be_expression() -> None:
     parsed = parse([Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "a"), Token(Type.OPERATOR, "+"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "c"), Token(Type.OPERATOR, "+"), Token(Type.IDENTIFIER, "d"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, ";")])
     assert parsed == ast.Block([ast.FunctionCall(ast.BinaryOp(ast.Identifier("a"), "+", ast.Identifier("b")), [ast.BinaryOp(ast.Identifier("c"), "+", ast.Identifier("d"))]), ast.Literal(None)])
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, ")")])
@@ -105,3 +107,5 @@ def test_parse_raises_error_for_bad_input() -> None:
         parse([Token(Type.KEYWORD, "if"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ";"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "5")])    
     with pytest.raises(Exception):
         parse([Token(Type.KEYWORD, "if"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, ";"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "5")])
+    with pytest.raises(Exception):
+        parse([Token(Type.PUNCTUATION, "{"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, ";"), Token(Type.OPERATOR, "+"), Token(Type.INT_LITERAL, "2")])

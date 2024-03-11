@@ -20,9 +20,9 @@ def parse(tokens: list[Token]) -> ast.Expression:
     def peek() -> Token:
         if not index < len(tokens):
             if tokens:
-                return Token(Type.END, "", tokens[-1].position)
+                return Token(Type.END, "end of input", tokens[-1].position)
             else:
-                return Token(Type.END, "")
+                return Token(Type.END, "end of input")
         return tokens[index]
     
     # 'consume(expected)' returns the token at 'pos'
@@ -63,7 +63,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
         consume("{")
         statements = []
         if peek().content != '}':
-            statements.append(parse_expression())
+            statements.append(parse_expression(True))
             while peek().content != '}':
                 if previous and previous != Token(Type.PUNCTUATION, "}"):
                     consume(";")
@@ -75,13 +75,13 @@ def parse(tokens: list[Token]) -> ast.Expression:
                     if peek().type == Type.PUNCTUATION and peek().content == '}':
                         statements.append(ast.Literal(None))
                         break
-                statements.append(parse_expression())
+                statements.append(parse_expression(True))
         consume("}")
         return ast.Block(statements)
     
     def parse_parentheses() -> ast.Expression:
         consume("(")
-        exp = parse_expression()
+        exp = parse_expression(False)
         consume(")")
         return exp
     
@@ -89,10 +89,10 @@ def parse(tokens: list[Token]) -> ast.Expression:
         consume("(")
         arguments = []
         if peek().content != ')':
-            arguments.append(parse_expression())
+            arguments.append(parse_expression(False))
             while peek().type == Type.PUNCTUATION and peek().content == ',':
                 consume(",")
-                arguments.append(parse_expression())
+                arguments.append(parse_expression(False))
         consume(")")
         return ast.FunctionCall(name, arguments)
     
@@ -115,32 +115,28 @@ def parse(tokens: list[Token]) -> ast.Expression:
         return exp
 
     def parse_while_expression():
-        exp = None
         if peek().type == Type.KEYWORD and peek().content == "while":
             consume("while")
-            condition = parse_expression()
+            condition = parse_expression(False)
             consume("do")
-            do = parse_expression()
-            exp = ast.While(condition, do)
+            do = parse_expression(False)
+            return ast.While(condition, do)
         else:
-            exp = parse_term()
-        return exp
+            return parse_term()
     
     def parse_if_expression() -> ast.Expression:
-        exp = None
         if peek().type == Type.KEYWORD and peek().content == "if":
             consume("if")
-            condition = parse_expression()
+            condition = parse_expression(False)
             consume("then")
-            then_branch = parse_expression()
+            then_branch = parse_expression(False)
             if peek().type == Type.KEYWORD and peek().content == "else":
                 consume("else")
-                exp = ast.If(condition, then_branch, parse_expression())
+                return ast.If(condition, then_branch, parse_expression(False))
             else:
-                exp = ast.If(condition, then_branch)
+                return ast.If(condition, then_branch)
         else:
-            exp = parse_while_expression()
-        return exp
+            return parse_while_expression()
     
     def parse_unary_expression() -> ast.Expression:
         if peek().type == Type.OPERATOR and peek().content in ["-", "not"]:
@@ -167,14 +163,31 @@ def parse(tokens: list[Token]) -> ast.Expression:
             exp = ast.BinaryOp(exp, op, right)
         return exp
     
-    def parse_expression() -> ast.Expression:
-        exp = parse_assignment()
-        return exp
+    def parse_variable_declaration() -> ast.Expression:
+        consume("var")
+        name = parse_identifier()
+        type_exp = None
+        if peek().type == Type.PUNCTUATION and peek().content == ':':
+            consume(":")
+            #type_exp = parse_type_expression() TODO: add type expression
+        consume("=")
+        value = parse_expression(False)
+        if isinstance(name, ast.Identifier):
+            return ast.VariableDeclaration(name, type_exp, value)
+        raise Exception("Alright, I think it's time for me to pack up an go.")
+    
+    def parse_expression(top_level: bool) -> ast.Expression:
+        if peek().type == Type.KEYWORD and peek().content == "var":
+            if not top_level:
+                raise Exception(f'{peek().position}: variable declaration is only allowed directly inside {{blocks}} and in top-level expressions')
+            return parse_variable_declaration()
+        else:
+            return parse_assignment()
     
     def parse_top_level() -> ast.Expression:
         if peek().type == Type.END:
             return ast.Literal(None) #how should empty token list be handled?
-        exp = parse_expression()
+        exp = parse_expression(True)
         if peek().type == Type.END:
             return exp
         statements = [exp]
@@ -189,7 +202,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
                 if peek().type == Type.END:
                     statements.append(ast.Literal(None))
                     break
-            statements.append(parse_expression())
+            statements.append(parse_expression(True))
         return ast.Block(statements)
 
     return parse_top_level()
