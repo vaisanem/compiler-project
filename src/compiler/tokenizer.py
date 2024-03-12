@@ -23,7 +23,7 @@ class Type(Enum):
     IDENTIFIER = 6
     END = 7
 
-@dataclass	
+@dataclass(frozen = True)
 class Position:
     line : int
     column : int
@@ -31,7 +31,7 @@ class Position:
     def __str__(self) -> str:
         return f'line {self.line}, column {self.column}'
 
-@dataclass
+@dataclass(frozen = True)
 class Token:
     type: Type
     content : str
