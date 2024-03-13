@@ -7,7 +7,15 @@ def test_parse_raises_error_for_bad_input() -> None:
     with pytest.raises(Exception):
         parse(tokenize("if then then then"))
     with pytest.raises(Exception):
-        parsed = parse(tokenize("not (not not) 1"))
+        parse(tokenize("not (not not) 1"))
+    with pytest.raises(Exception):
+        parse(tokenize("var false = 0"))
+    with pytest.raises(Exception):
+        parse(tokenize("{var true = 0; true = 2}"))
+    with pytest.raises(Exception):
+        parse(tokenize("or(1+2, 3)"))
+    with pytest.raises(Exception):
+        parse(tokenize("var if = 2; if+2)"))
         
 def test_parse_unary_expression() -> None:
     parsed = parse(tokenize("- 1"))
@@ -26,10 +34,20 @@ def test_parse_unary_expression() -> None:
     assert parsed == ast.UnaryOp("-", ast.FunctionCall(ast.Identifier("f"), []))
     parsed = parse(tokenize("f(-1)"))
     assert parsed == ast.FunctionCall(ast.Identifier("f"), [ast.UnaryOp("-", ast.Literal(1))])
+    parsed = parse(tokenize("not(1)"))
+    assert parsed == ast.UnaryOp("not", ast.Literal(1))
+    
+def test_parse_binary_expression() -> None:
+    parsed = parse(tokenize("false and(true)"))
+    assert parsed == ast.BinaryOp(ast.Literal(False), "and", ast.Literal(True))
+    parsed = parse(tokenize("1 or(1+3)"))
+    assert parsed == ast.BinaryOp(ast.Literal(1), "or", ast.BinaryOp(ast.Literal(1), "+", ast.Literal(3)))
         
 def test_parse_variable_declaration() -> None:
     parsed = parse(tokenize("var a = 1 + 19"))
     assert parsed == ast.VariableDeclaration(ast.Identifier("a"), None, ast.BinaryOp(ast.Literal(1), "+", ast.Literal(19)))
+    parsed = parse(tokenize("var print_int = true"))
+    assert parsed == ast.VariableDeclaration(ast.Identifier("print_int"), None, ast.Literal(True))
     
 def test_block_inside_if_expression() -> None:
     parsed = parse(tokenize("if if a then {a;b} then 3"))
@@ -80,4 +98,8 @@ def test_variable_declaration_is_not_allowed_inside_other_expressions() -> None:
 def test_parse_random() -> None:
     parsed = parse(tokenize("x = { { f(a) } { b } }"))
     assert parsed == ast.BinaryOp(ast.Identifier("x"), "=", ast.Block([ast.Block([ast.FunctionCall(ast.Identifier("f"), [ast.Identifier("a")])]), ast.Block([ast.Identifier("b")])]))
+    parsed = parse(tokenize("true(1)"))
+    assert parsed == ast.FunctionCall(ast.Literal(True), [ast.Literal(1)])
+    parsed = parse(tokenize("1()"))
+    assert parsed == ast.FunctionCall(ast.Literal(1), [])
     

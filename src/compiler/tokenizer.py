@@ -5,10 +5,10 @@ from enum import Enum
 
 whitepace = re.compile(r'\s');
 punctuation = re.compile("[(){},;]")
-operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or") #Reserved all of these as "not" couldnt be used as identifier in sandbox anyway
+operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or")
 int_literal = re.compile("[0-9]+")
 bool_literal = re.compile("true|false")
-keyword = re.compile("if|then|else|while|do|var") #unit? Reserved all of these as "if", "while" and "var" couldnt be used as identfiers in sandbox anyway
+keyword = re.compile("if|then|else|while|do|var") #unit?
 identifier = re.compile("[a-zA-Z_][a-zA-Z0-9_]*")
 comment = re.compile(r'(//|#).*')
 

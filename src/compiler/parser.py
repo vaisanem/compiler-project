@@ -36,27 +36,27 @@ def parse(tokens: list[Token]) -> ast.Expression:
         nonlocal index, previous
         token = peek()
         if isinstance(expected, str) and token.content != expected:
-            raise Exception(f'{token.position}: expected "{expected}" instead of "{token.content}"')
+            raise SyntaxError(f'{token.position}: expected "{expected}" instead of "{token.content}"')
         if isinstance(expected, list) and token.content not in expected:
             comma_separated = ", ".join([f'"{e}"' for e in expected])
-            raise Exception(f'{token.position}: expected one of: {comma_separated} instead of "{token.content}"')
+            raise SyntaxError(f'{token.position}: expected one of: {comma_separated} instead of "{token.content}"')
         index += 1
         previous = token
         return token
 
     def parse_int_literal() -> ast.Expression:
         if not peek().type == Type.INT_LITERAL:
-            raise Exception(f'{peek().position}: expected integer literal')
+            raise SyntaxError(f'{peek().position}: expected integer literal instead of "{peek().content}"')
         return ast.Literal(int(consume().content))
     
     def parse_bool_literal() -> ast.Expression:
         if not peek().type == Type.BOOL_LITERAL:
-            raise Exception(f'{peek().position}: expected boolean literal')
+            raise SyntaxError(f'{peek().position}: expected boolean literal instead of "{peek().content}"')
         return ast.Literal(consume(["true", "false"]).content == "true")
     
     def parse_identifier() -> ast.Expression:
         if not peek().type == Type.IDENTIFIER:
-            raise Exception(f'{peek().position}: expected identifier')
+            raise SyntaxError(f'{peek().position}: expected identifier instead of "{peek().content}"')
         return ast.Identifier(consume().content)
     
     def parse_block() -> ast.Expression:
@@ -103,13 +103,13 @@ def parse(tokens: list[Token]) -> ast.Expression:
         elif peek().type == Type.PUNCTUATION and peek().content == '(':
             exp = parse_parentheses()
         elif peek().type == Type.INT_LITERAL:
-            exp = parse_int_literal()
+            exp = parse_int_literal() # do not allow?
         elif peek().type == Type.BOOL_LITERAL:
-            exp = parse_bool_literal()
+            exp = parse_bool_literal() # do not allow?
         elif peek().type == Type.IDENTIFIER:
             exp = parse_identifier()
         else:
-            raise Exception(f'{peek().position}: expected "(", literal or identifier instead of "{peek().content}"')
+            raise SyntaxError(f'{peek().position}: expected expression instead of "{peek().content}"')
         while peek().type == Type.PUNCTUATION and peek().content == '(':
             exp = parse_function_call(exp)
         return exp
@@ -139,7 +139,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
             return parse_while_expression()
     
     def parse_unary_expression() -> ast.Expression:
-        if peek().type == Type.OPERATOR and peek().content in ["-", "not"]:
+        if peek().type == Type.OPERATOR and peek().content in ['-', 'not']:
             op = consume().content
             return ast.UnaryOp(op, parse_unary_expression())
         else:
@@ -179,14 +179,14 @@ def parse(tokens: list[Token]) -> ast.Expression:
     def parse_expression(top_level: bool) -> ast.Expression:
         if peek().type == Type.KEYWORD and peek().content == "var":
             if not top_level:
-                raise Exception(f'{peek().position}: variable declaration is only allowed directly inside {{blocks}} and in top-level expressions')
+                raise SyntaxError(f'{peek().position}: variable declaration is only allowed directly inside {{blocks}} and in top-level expressions')
             return parse_variable_declaration()
         else:
             return parse_assignment()
     
     def parse_top_level() -> ast.Expression:
         if peek().type == Type.END:
-            return ast.Literal(None) #how should empty token list be handled?
+            return ast.Literal(None) #how should empty token list be represented?
         exp = parse_expression(True)
         if peek().type == Type.END:
             return exp
