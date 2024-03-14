@@ -7,16 +7,24 @@ class SymbolTable:
         def __init__(self, parent) -> None:
             self.parent: SymbolTable.Scope = parent
             self.table: Dict[str, list[Type]] = {}
+            
+        def insert(self, symbol, value) -> bool:
+            if not self.table.get(symbol):
+                self.table[symbol] = [value]
+                return True
+            else:
+                return False
+            
+        def lookup(self, symbol) -> list[Type] | None:
+            return self.table.get(symbol)
 
-    def __init__(self) -> None: # Allow print and read?
-        self.sym_table = SymbolTable.Scope(None)
+    def __init__(self) -> None: # Add '==', '!=', 'print' and 'read'?
+        self.current_scope = SymbolTable.Scope(None)
         for each in ['+', '-', '*', '/', '%']:
             self.insert(each, FunctionType([Int(), Int()], Int()))
-        self.sym_table.table['-'].append(FunctionType([Int()], Int())) # '-' as negation
-        for each in ['<', '<=', '>', '>=', '==', '!=']:
+        self.current_scope.table['-'].append(FunctionType([Int()], Int())) # '-' as negation
+        for each in ['<', '<=', '>', '>=']:
             self.insert(each, FunctionType([Int(), Int()], Bool()))
-        self.sym_table.table['=='].append(FunctionType([Bool(), Bool()], Bool())) # '==' for boolean values
-        self.sym_table.table['!='].append(FunctionType([Bool(), Bool()], Bool())) # '!=' for boolean values
         self.insert("and", FunctionType([Bool(), Bool()], Bool()))
         self.insert("or", FunctionType([Bool(), Bool()], Bool()))
         self.insert("not", FunctionType([Bool()], Bool()))
@@ -24,20 +32,21 @@ class SymbolTable:
         self.insert("print_bool", FunctionType([Bool()], Unit()))
         self.insert("read_int", FunctionType([], Int()))
         
-    def init_scope(self) -> Scope:
-        return SymbolTable.Scope(self.sym_table)
+    def init_scope(self) -> None:
+        self.current_scope = SymbolTable.Scope(self.current_scope)
+        
+    def exit_scope(self) -> None:
+        if self.current_scope.parent is not None:
+            self.current_scope = self.current_scope.parent
 
     def insert(self, symbol, value) -> bool:
-        if not self.sym_table.table.get(symbol):
-            self.sym_table.table[symbol] = [value]
-            return True
-        else:
-            return False
+        return self.current_scope.insert(symbol, value)
 
     def lookup(self, symbol) -> list[Type] | None:
-        scope = self.sym_table
-        while not scope.table.get(symbol):
-            if not scope.parent:
-                return None
+        scope = self.current_scope
+        while scope:
+            current_type = scope.lookup(symbol)
+            if current_type:
+                return current_type
             scope = scope.parent
-        return scope.table.get(symbol)
+        return None

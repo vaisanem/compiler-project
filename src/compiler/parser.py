@@ -103,9 +103,9 @@ def parse(tokens: list[Token]) -> ast.Expression:
         elif peek().type == Type.PUNCTUATION and peek().content == '(':
             exp = parse_parentheses()
         elif peek().type == Type.INT_LITERAL:
-            exp = parse_int_literal() # do not allow?
+            exp = parse_int_literal() # do not allow in function calls?
         elif peek().type == Type.BOOL_LITERAL:
-            exp = parse_bool_literal() # do not allow?
+            exp = parse_bool_literal() # do not allow in function calls?
         elif peek().type == Type.IDENTIFIER:
             exp = parse_identifier()
         else:
@@ -174,7 +174,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
         value = parse_expression(False)
         if isinstance(name, ast.Identifier):
             return ast.VariableDeclaration(name, type_exp, value)
-        raise Exception("Alright, I think it's time for me to pack up an go.")
+        raise Exception("Alright, I think it's time for me to pack up an go")
     
     def parse_expression(top_level: bool) -> ast.Expression:
         if peek().type == Type.KEYWORD and peek().content == "var":

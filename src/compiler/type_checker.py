@@ -2,7 +2,7 @@ import compiler.ast as ast
 from compiler.types import Type, Unit, Int, Bool, FunctionType
 from compiler.symbol_table import SymbolTable
 
-def typecheck(node: ast.Expression, sym_table: SymbolTable) -> Type: # Built-in functions as separate type? Add position to error messages?
+def typecheck(node: ast.Expression, sym_table: SymbolTable) -> list[Type] | Type: # Add position to error messages
 	match node:
 		case ast.Literal():
 			if node.value is None:
@@ -11,23 +11,60 @@ def typecheck(node: ast.Expression, sym_table: SymbolTable) -> Type: # Built-in 
 				return Bool()
 			elif isinstance(node.value, int):
 				return Int()
-			raise TypeError(f'Failed to resolve the type of: "{node.value}"')
+			raise Exception("Can you do that again, and let's hope for a different result")
 		case ast.Identifier():
 			types = sym_table.lookup(node.name)
 			if not types:
 				raise NameError(f'Variable "{node.name}" not found')
-			return types[0] # We also lookup functions which could theoretically have alternative types
-		case ast.VariableDeclaration(): # Allow shadowing built-in functions? How about and, or and not operators?
-			var_type = node.type_exp # type_exp to type, typecheck type_exp?
+			return types if len(types) > 1 else types[0]
+		case ast.VariableDeclaration():
+			var_type = node.type_exp
 			if var_type is None:
 				var_type = typecheck(node.value, sym_table)
-			else: # typed -> check that types match
+			else: # typed -> check that types match, # type_exp to type + typecheck it?
 				pass
 			if not sym_table.insert(node.name, var_type):
 				raise NameError(f'Variable "{node.name}" already declared in this scope')
 			return Unit()
+		case ast.UnaryOp(): # combine with BinaryOp general case?
+			type_right = typecheck(node.right, sym_table)
+			op_types = sym_table.lookup(node.op)
+			if not op_types:
+				raise Exception("I don't know what I'm doing honestly")
+			for one in op_types: # make this work with multiple types?
+				if not isinstance(one, FunctionType) or len(one.param_types) != 1:
+					continue
+				if type_right != one.param_types[0]:
+					raise TypeError(f'Unary operator "{node.op}" expects right side to have type {one.param_types[0]} instead of {type_right}')
+				return one.return_type	
+		case ast.BinaryOp():
+			type_left = typecheck(node.left, sym_table)
+			type_right = typecheck(node.right, sym_table)
+			if node.op == '=':
+				if not isinstance(node.left, ast.Identifier):
+					raise TypeError(f'Left side of assignment must be a variable name')
+				elif type_left != type_right:
+					raise TypeError(f'Assignment expects same type on both sides, instead left side was {type_left} and right side was {type_right}')
+				# no need to do the assignment as the type can't change
+				return type_right
+			elif node.op in ['==', '!=']:
+				if type_left != type_right: 
+					raise TypeError(f'Binary operator "{node.op}" expects same type on both sides, instead left side was {type_left} and right side was {type_right}')
+				return Bool()
+			else: # combine with UnaryOp?
+				op_types = sym_table.lookup(node.op)
+				if not op_types:
+					raise Exception("There is something fundamentally wrong with me")
+				for one in op_types: # make this work with multiple types?
+					if not isinstance(one, FunctionType) or len(one.param_types) != 2:
+						continue
+					if type_left != one.param_types[0]:
+						raise TypeError(f'Binary operator "{node.op}" expects left side to have type {one.param_types[0]} instead of {type_left}')
+					if type_right != one.param_types[1]:
+						raise TypeError(f'Binary operator "{node.op}" expects right side to have type {one.param_types[1]} instead of {type_right}')
+					return one.return_type
 		case ast.FunctionCall():
-			fun_type = typecheck(node.name, sym_table) # Expression allowed as name, add parameter that tells it's function name (no)?
+			fun_type = typecheck(node.name, sym_table)
 			if not isinstance(fun_type, FunctionType):
 				raise TypeError(f'Expected a function instead of {fun_type}') # make Type print nicely
 			if len(node.arguments) != len(fun_type.param_types):
@@ -54,9 +91,10 @@ def typecheck(node: ast.Expression, sym_table: SymbolTable) -> Type: # Built-in 
 			typecheck(node.do, sym_table)
 			return Unit()
 		case ast.Block():
-			sym_table = sym_table.init_scope() # Doesnt work
+			sym_table.init_scope()
 			return_type = Unit()
 			for statement in node.statements:
 				return_type = typecheck(statement, sym_table)
+			sym_table.exit_scope()
 			return return_type
-	raise TypeError("Idk whatever")
+	raise Exception("Idk whatever")

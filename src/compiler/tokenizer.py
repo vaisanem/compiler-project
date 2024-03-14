@@ -55,7 +55,7 @@ def tokenize(source_code: str) -> list[Token]:
         match = whitepace.match(source_code)
         if match:
             source_code = source_code[match.end():]
-            if (match.group() in ["\n", "\r", "\v", "\f"]): # how to handle tabs?
+            if match.group() == '\n': # how to handle tabs?
                 location["line"] += 1
                 location["column"] = 1
             else:
