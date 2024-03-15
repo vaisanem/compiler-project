@@ -44,17 +44,17 @@ def parse(tokens: list[Token]) -> ast.Expression:
         previous = token
         return token
 
-    def parse_int_literal() -> ast.Expression:
+    def parse_int_literal() -> ast.Literal:
         if not peek().type == Type.INT_LITERAL:
             raise SyntaxError(f'{peek().position}: expected integer literal instead of "{peek().content}"')
         return ast.Literal(int(consume().content))
     
-    def parse_bool_literal() -> ast.Expression:
+    def parse_bool_literal() -> ast.Literal:
         if not peek().type == Type.BOOL_LITERAL:
             raise SyntaxError(f'{peek().position}: expected boolean literal instead of "{peek().content}"')
         return ast.Literal(consume(["true", "false"]).content == "true")
     
-    def parse_identifier() -> ast.Expression:
+    def parse_identifier() -> ast.Identifier:
         if not peek().type == Type.IDENTIFIER:
             raise SyntaxError(f'{peek().position}: expected identifier instead of "{peek().content}"')
         return ast.Identifier(consume().content)
@@ -134,7 +134,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
                 consume("else")
                 return ast.If(condition, then_branch, parse_expression(False))
             else:
-                return ast.If(condition, then_branch)
+                return ast.If(condition, then_branch, None)
         else:
             return parse_while_expression()
     
@@ -169,12 +169,10 @@ def parse(tokens: list[Token]) -> ast.Expression:
         type_exp = None
         if peek().type == Type.PUNCTUATION and peek().content == ':':
             consume(":")
-            #type_exp = parse_type_expression() TODO: add type expression
+            type_exp = parse_identifier()
         consume("=")
         value = parse_expression(False)
-        if isinstance(name, ast.Identifier):
-            return ast.VariableDeclaration(name, type_exp, value)
-        raise Exception("Alright, I think it's time for me to pack up an go")
+        return ast.VariableDeclaration(name, type_exp, value)
     
     def parse_expression(top_level: bool) -> ast.Expression:
         if peek().type == Type.KEYWORD and peek().content == "var":

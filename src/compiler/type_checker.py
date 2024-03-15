@@ -2,6 +2,8 @@ import compiler.ast as ast
 from compiler.types import Type, Unit, Int, Bool, FunctionType
 from compiler.symbol_table import SymbolTable
 
+declarable_types: list[str] = ["Unit", "Int", "Bool"]
+
 def typecheck(node: ast.Expression, sym_table: SymbolTable) -> list[Type] | Type: # Add position to error messages
 	match node:
 		case ast.Literal():
@@ -19,12 +21,15 @@ def typecheck(node: ast.Expression, sym_table: SymbolTable) -> list[Type] | Type
 			return types if len(types) > 1 else types[0]
 		case ast.VariableDeclaration():
 			var_type = node.type_exp
-			if var_type is None:
-				var_type = typecheck(node.value, sym_table)
-			else: # typed -> check that types match, # type_exp to type + typecheck it?
-				pass
-			if not sym_table.insert(node.name, var_type):
-				raise NameError(f'Variable "{node.name}" already declared in this scope')
+			assigned_type = typecheck(node.value, sym_table)
+			if var_type is not None:
+				if var_type.name not in declarable_types:
+					raise TypeError(f'Unknown type "{var_type.name}"')
+				var_type = eval(var_type.name)()
+				if assigned_type != var_type:
+					raise TypeError(f'Variable "{node.name.name}" expects type {var_type} instead of {assigned_type}')
+			if not sym_table.insert(node.name.name, assigned_type):
+				raise NameError(f'Variable "{node.name.name}" already declared in this scope')
 			return Unit()
 		case ast.UnaryOp(): # combine with BinaryOp general case?
 			type_right = typecheck(node.right, sym_table)
@@ -66,7 +71,7 @@ def typecheck(node: ast.Expression, sym_table: SymbolTable) -> list[Type] | Type
 		case ast.FunctionCall():
 			fun_type = typecheck(node.name, sym_table)
 			if not isinstance(fun_type, FunctionType):
-				raise TypeError(f'Expected a function instead of {fun_type}') # make Type print nicely
+				raise TypeError(f'Expected a function instead of {fun_type}')
 			if len(node.arguments) != len(fun_type.param_types):
 				raise TypeError(f'Function "{node.name}" expects {len(fun_type.param_types)} arguments instead of {len(node.arguments)}')
 			for one in range(len(node.arguments)):
@@ -97,4 +102,4 @@ def typecheck(node: ast.Expression, sym_table: SymbolTable) -> list[Type] | Type
 				return_type = typecheck(statement, sym_table)
 			sym_table.exit_scope()
 			return return_type
-	raise Exception("Idk whatever")
+	raise Exception("Alright, I think it's time for me to pack up an go")

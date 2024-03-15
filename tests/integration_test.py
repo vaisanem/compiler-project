@@ -29,7 +29,7 @@ def test_parse_unary_expression() -> None:
     parsed = parse(tokenize("- (1 * 2)"))
     assert parsed == ast.UnaryOp("-", ast.BinaryOp(ast.Literal(1), "*", ast.Literal(2)))
     parsed = parse(tokenize("- if not true then false"))
-    assert parsed == ast.UnaryOp("-", ast.If(ast.UnaryOp("not", ast.Literal(True)), ast.Literal(False)))
+    assert parsed == ast.UnaryOp("-", ast.If(ast.UnaryOp("not", ast.Literal(True)), ast.Literal(False), None))
     parsed = parse(tokenize("-f()"))
     assert parsed == ast.UnaryOp("-", ast.FunctionCall(ast.Identifier("f"), []))
     parsed = parse(tokenize("f(-1)"))
@@ -51,9 +51,9 @@ def test_parse_variable_declaration() -> None:
     
 def test_block_inside_if_expression() -> None:
     parsed = parse(tokenize("if if a then {a;b} then 3"))
-    assert parsed == ast.If(ast.If(ast.Identifier("a"), ast.Block([ast.Identifier("a"), ast.Identifier("b")])), ast.Literal(3))
+    assert parsed == ast.If(ast.If(ast.Identifier("a"), ast.Block([ast.Identifier("a"), ast.Identifier("b")]), None), ast.Literal(3), None)
     parsed = parse(tokenize("if {{}} then 0"))
-    assert parsed == ast.If(ast.Block([ast.Block([])]), ast.Literal(0))
+    assert parsed == ast.If(ast.Block([ast.Block([])]), ast.Literal(0), None)
     
 def test_parse_while_expression() -> None:
     parsed = parse(tokenize("while a do 1"))

@@ -15,11 +15,11 @@ def test_semicolon_is_not_required_for_block_inside_block() -> None:
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "}")])
     assert parsed == ast.Block([ast.Block([ast.Identifier("a")]), ast.Block([ast.Identifier("b")])])
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}")])
-    assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")])), ast.Identifier("b")])
+    assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")]), None), ast.Identifier("b")])
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.KEYWORD, "else"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}"), Token(Type.INT_LITERAL, "3"), Token(Type.PUNCTUATION, "}")])
     assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")]), ast.Block([ast.Identifier("b")])), ast.Literal(3)])
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, ";"), Token(Type.IDENTIFIER, "c"), Token(Type.PUNCTUATION, "}")])
-    assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")])), ast.Identifier("b"), ast.Identifier("c")])
+    assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")]), None), ast.Identifier("b"), ast.Identifier("c")])
 
 def test_block_has_correct_return_value() -> None:
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, ";"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, ";")])
@@ -33,9 +33,9 @@ def test_curly_brackets_can_be_omitted_on_top_level() -> None:
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, "}"), Token(Type.IDENTIFIER, "a")])
     assert parsed == ast.Block([ast.Block([ast.Literal(1)]), ast.Identifier("a")])
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.INT_LITERAL, "1"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, ";")])
-    assert parsed == ast.Block([ast.If(ast.Literal(1), ast.Literal(1)), ast.Literal(None)])
+    assert parsed == ast.Block([ast.If(ast.Literal(1), ast.Literal(1), None), ast.Literal(None)])
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.INT_LITERAL, "1"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, ";"), Token(Type.IDENTIFIER, "a")])
-    assert parsed == ast.Block([ast.If(ast.Literal(1), ast.Literal(1)), ast.Identifier("a")])
+    assert parsed == ast.Block([ast.If(ast.Literal(1), ast.Literal(1), None), ast.Identifier("a")])
     parsed = parse([Token(Type.INT_LITERAL, "2"), Token(Type.PUNCTUATION, ";"), Token(Type.IDENTIFIER, "a"), Token(Type.OPERATOR, "=="), Token(Type.INT_LITERAL, "3")])
     assert parsed == ast.Block([ast.Literal(2), ast.BinaryOp(ast.Identifier("a"), "==", ast.Literal(3))])
     
@@ -51,11 +51,11 @@ def test_semicolon_can_be_omitted_after_block() -> None:
     
 def test_random() -> None:
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, ";"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}")])
-    assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")])), ast.Identifier("b")])
+    assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")]), None), ast.Identifier("b")])
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.PUNCTUATION, "{"), Token(Type.PUNCTUATION, "{"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, ";")])
     assert parsed == ast.Block([ast.Block([ast.Block([ast.Block([])])]), ast.Literal(None)])
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.KEYWORD, "if"), Token(Type.KEYWORD, "if"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ";"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.PUNCTUATION, "{"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "}"), Token(Type.KEYWORD, "then"), Token(Type.INT_LITERAL, "0"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, ";")])
-    assert parsed == ast.Block([ast.Block([ast.If(ast.If(ast.Block([ast.Identifier("a"), ast.Identifier("b")]), ast.Block([ast.Block([])])), ast.Literal(0))]), ast.Literal(None)])
+    assert parsed == ast.Block([ast.Block([ast.If(ast.If(ast.Block([ast.Identifier("a"), ast.Identifier("b")]), ast.Block([ast.Block([])]), None), ast.Literal(0), None)]), ast.Literal(None)])
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ";"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}"), Token(Type.OPERATOR, "=="), Token(Type.INT_LITERAL, "9")])
     assert parsed == ast.BinaryOp(ast.Block([ast.Identifier("a"), ast.Identifier("b")]), "==", ast.Literal(9))
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, ";"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, "}"), Token(Type.OPERATOR, "=="), Token(Type.INT_LITERAL, "9"), Token(Type.PUNCTUATION, ";")])
@@ -85,7 +85,7 @@ def test_top_level_works_fine() -> None:
     parsed = parse([Token(Type.PUNCTUATION, "{"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "{"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, "}"), Token(Type.PUNCTUATION, "{"), Token(Type.INT_LITERAL, "1"), Token(Type.PUNCTUATION, "}")])
     assert parsed == ast.Block([ast.Block([ast.Literal(1)]), ast.Block([ast.Literal(1)]), ast.Block([ast.Literal(1)])])
     parsed = parse([Token(Type.KEYWORD, "if"), Token(Type.BOOL_LITERAL, "true"), Token(Type.KEYWORD, "then"), Token(Type.PUNCTUATION, "{"), Token(Type.IDENTIFIER, "a"), Token(Type.PUNCTUATION, "}"), Token(Type.IDENTIFIER, "b")])
-    assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")])), ast.Identifier("b")])
+    assert parsed == ast.Block([ast.If(ast.Literal(True), ast.Block([ast.Identifier("a")]), None), ast.Identifier("b")])
 
 def test_i_guess_function_name_can_also_be_expression() -> None:
     parsed = parse([Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "a"), Token(Type.OPERATOR, "+"), Token(Type.IDENTIFIER, "b"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, "("), Token(Type.IDENTIFIER, "c"), Token(Type.OPERATOR, "+"), Token(Type.IDENTIFIER, "d"), Token(Type.PUNCTUATION, ")"), Token(Type.PUNCTUATION, ";")])

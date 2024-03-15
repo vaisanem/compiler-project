@@ -34,7 +34,7 @@ class While(Expression):
 class If(Expression):
     condition: Expression
     then_branch: Expression
-    else_branch: Expression | None = None
+    else_branch: Expression | None
     
 @dataclass
 class FunctionCall(Expression):
@@ -44,7 +44,7 @@ class FunctionCall(Expression):
 @dataclass
 class VariableDeclaration(Expression):
     name: Identifier
-    type_exp: None
+    type_exp: Identifier | None
     value: Expression
     
 @dataclass
