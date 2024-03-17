@@ -4,7 +4,7 @@ import re
 from enum import Enum
 
 whitepace = re.compile(r'\s');
-punctuation = re.compile("[(){},;]")
+punctuation = re.compile("[(){},;:]")
 operator = re.compile("[=!<>]=|[=<>%*/+-]|not|and|or")
 int_literal = re.compile("[0-9]+")
 bool_literal = re.compile("true|false")
