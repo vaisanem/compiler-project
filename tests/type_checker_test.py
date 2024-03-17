@@ -35,6 +35,17 @@ def test_typecheck_raises_error_for_bad_input() -> None:
         typecheck(parse(tokenize("print_int(1, 2)")), SymbolTable())
     with pytest.raises(Exception):
         typecheck(parse(tokenize("read_int(1)")), SymbolTable())
+    with pytest.raises(Exception):
+        typecheck(parse(tokenize("true - false")), SymbolTable())
+    with pytest.raises(Exception):
+        typecheck(parse(tokenize("1 and 2")), SymbolTable())
+    with pytest.raises(Exception):
+        typecheck(parse(tokenize("not 1")), SymbolTable())
+    with pytest.raises(Exception):
+        typecheck(parse(tokenize("1 < true")), SymbolTable())
+    with pytest.raises(Exception):
+        typecheck(parse(tokenize("- true")), SymbolTable())
+           
         
 def test_valid_program_typechecks() -> None:
     typecheck(parse(tokenize("1")), SymbolTable())
@@ -54,3 +65,4 @@ def test_valid_program_typechecks() -> None:
     typecheck(parse(tokenize("var x: Int = 2 - -1")), SymbolTable())
     typecheck(parse(tokenize("var x: Int = {300}")), SymbolTable())
     typecheck(parse(tokenize("1 * 1 != 2 / 2")), SymbolTable())
+    typecheck(parse(tokenize("read_int()")), SymbolTable())
