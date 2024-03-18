@@ -73,11 +73,11 @@ def typecheck(node: ast.Expression, sym_table: SymbolTable) -> list[Type] | Type
 			if not isinstance(fun_type, FunctionType):
 				raise TypeError(f'{node.name.position}: Expected a function instead of {fun_type}')
 			if len(node.arguments) != len(fun_type.param_types):
-				raise TypeError(f'{node.name.position}: Function "{node.name}" expects {len(fun_type.param_types)} arguments instead of {len(node.arguments)}')
+				raise TypeError(f'{node.name.position}: Function expects {len(fun_type.param_types)} arguments instead of {len(node.arguments)}')
 			for one in range(len(node.arguments)):
 				arg_type = typecheck(node.arguments[one], sym_table)
 				if arg_type != fun_type.param_types[one]:
-					raise TypeError(f'{node.name.position}: Function "{node.name}" expects parameter {one} to have type {fun_type.param_types[one]} instead of {arg_type}')
+					raise TypeError(f'{node.name.position}: Function expects parameter {one + 1} to have type {fun_type.param_types[one]} instead of {arg_type}')
 			return fun_type.return_type
 		case ast.If():
 			cond_type = typecheck(node.condition, sym_table)
