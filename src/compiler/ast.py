@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from compiler.tokenizer import Position
 
 @dataclass
-class Expression: #TODO: change to or add Statement (as base class of Expression)?
+class Expression:
     """Base class for AST nodes representing expressions."""
     position: Position
 
@@ -17,12 +17,12 @@ class Identifier(Expression):
     name: str
     
 @dataclass
-class UnaryOp(Expression): #Rename to Unary and Binary respectively?
+class UnaryOp(Expression):
     op: str
     right: Expression
 
 @dataclass
-class BinaryOp(Expression): #Separate assignment node?
+class BinaryOp(Expression):
     left: Expression
     op: str
     right: Expression

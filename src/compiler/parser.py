@@ -160,7 +160,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
             exp = ast.BinaryOp(left = exp, op = op, right = right, position = token.position)
         return exp
     
-    def parse_assignment() -> ast.Expression:
+    def parse_assignment() -> ast.Expression: # combine to parse_binary_expression
         exp = parse_binary_expression(lowest_precedence)
         if peek().type == Type.OPERATOR and peek().content == '=':
             token = consume("=")
