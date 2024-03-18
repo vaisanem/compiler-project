@@ -1,11 +1,15 @@
-import sys
+﻿import sys
+from compiler.tokenizer import tokenize
+from compiler.parser import parse
+from compiler.type_checker import typecheck
+from compiler.symbol_table import SymbolTable
 
-# TODO(student): add more commands as needed
+# add more commands as needed
 usage = f"""
 Usage: {sys.argv[0]} <command> [source_code_file]
-
-Command 'interpret':
-    Runs the interpreter on source code.
+    
+Command 'typecheck':
+    Runs the type checker on source code.
 
 Common arguments:
     source_code_file        Optional. Defaults to standard input if missing.
@@ -39,9 +43,10 @@ def main() -> int:
         print(f"Error: command argument missing\n\n{usage}", file=sys.stderr)
         return 1
 
-    if command == 'interpret':
+    if command == 'typecheck':
         source_code = read_source_code()
-        ...  # TODO(student)
+        typecheck(parse(tokenize(source_code)), SymbolTable())
+        print("\nI approve ✓")
     else:
         print(f"Error: unknown command: {command}\n\n{usage}", file=sys.stderr)
         return 1

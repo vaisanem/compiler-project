@@ -1,12 +1,11 @@
 from compiler.types import Type, Unit, Int, Bool, FunctionType
-from typing import Dict
 
 class SymbolTable:
     
     class Scope:
         def __init__(self, parent) -> None:
             self.parent: SymbolTable.Scope = parent
-            self.table: Dict[str, list[Type]] = {}
+            self.table: dict[str, list[Type]] = {}
             
         def insert(self, symbol, value) -> bool:
             if not self.table.get(symbol):

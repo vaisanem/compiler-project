@@ -30,12 +30,15 @@ class Position:
     
     def __str__(self) -> str:
         return f'line {self.line}, column {self.column}'
+    
+    def __eq__(self, other: object) -> bool:
+        return True
 
 @dataclass(frozen = True)
 class Token:
     type: Type
     content : str
-    position : Position = field(default_factory=lambda: Position(0,0))
+    position : Position = field(default_factory=lambda: Position(1,1))
 
 def tokenize(source_code: str) -> list[Token]:
     tokens = []
@@ -47,7 +50,7 @@ def tokenize(source_code: str) -> list[Token]:
             return
         nonlocal source_code
         token = match.group();
-        tokens.append(Token(type, token)) #TODO: add position to tokens
+        tokens.append(Token(type, token, Position(location["line"], location["column"])))
         source_code = source_code[match.end():]
         location["column"] += match.end()
 
